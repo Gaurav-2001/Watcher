@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watcher-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: watcher
+  template:
+    metadata:
+      labels:
+        app: watcher
+    spec:
+      containers:
+        - name: watcher
+          image: gaurav2001/watcher:v1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: watcher-srv
+  labels:
+    prometheus: cluster-monitoring
+    k8s-app: kube-state-metrics
+spec:
+  selector:
+    app: watcher
+  type: ClusterIP
+  ports:
+    - name: watcher
+      protocol: TCP
+      port: 3036
+      targetPort: 3036
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: watcher-rbac
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: default
